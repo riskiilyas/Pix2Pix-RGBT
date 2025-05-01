@@ -1,0 +1,24 @@
+artifacts_root: artifacts
+
+data_ingestion:
+  root_dir: artifacts/data_ingestion
+  data_path: artifacts/data_ingestion/processed
+  local_data_file: data
+
+data_transformation:
+  root_dir: artifacts/data_transformation
+  data_path: artifacts/data_ingestion/processed
+
+model_trainer:
+  root_dir: artifacts/model_trainer
+  data_path: artifacts/data_ingestion/processed
+
+model_evaluation:
+  root_dir: artifacts/model_evaluation
+  model_path: artifacts/model_trainer
+  evaluation_path: artifacts/model_evaluation/results
+
+prediction:
+  model_path: artifacts/model_trainer
+  input_dir: input
+  output_dir: output

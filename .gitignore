@@ -1,0 +1,76 @@
+# Python generated files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment and IDE
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific directories
+logs/
+artifacts/
+data/
+input/
+output/
+*.pth
+*.pt
+*.pkl
+*.h5
+
+# Data files that might be large
+*.jpg
+*.jpeg
+*.png
+*.tiff
+*.tif
+*.npy
+*.npz
+*.csv
+
+# OS specific
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+*.sqlite3
+
+# Model checkpoints
+checkpoints/
+*.ckpt
+
+# Streamlit
+.streamlit/

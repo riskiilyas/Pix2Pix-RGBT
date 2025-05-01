@@ -1,0 +1,15 @@
+# Data split ratios
+TRAIN_RATIO: 0.7
+VAL_RATIO: 0.15
+TEST_RATIO: 0.15
+RANDOM_STATE: 42
+
+# Data preprocessing
+IMAGE_SIZE: 256
+BATCH_SIZE: 16
+NUM_WORKERS: 4
+
+# Model parameters
+DIRECTION: "rgb2thermal"  # "rgb2thermal" or "thermal2rgb"
+NUM_EPOCHS: 200
+LEARNING_RATE: 0.0002
