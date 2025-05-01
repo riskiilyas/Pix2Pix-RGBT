@@ -2,6 +2,17 @@
 
 This project implements a Pix2Pix GAN model for translating between RGB and thermal images. The model can be trained to translate RGB images to thermal images (rgb2thermal) or thermal images to RGB images (thermal2rgb).
 
+## Download the Pre-trained Model
+
+You can download the pre-trained model from the link below:
+
+[Download Pre-trained Model (best.pth)](https://drive.google.com/file/d/1-CklZwAS-zRLOK3jyUGfQcDsQC6eu1a4/view?usp=sharing)
+
+After downloading the model, place it in the following directory:
+```
+artifacts/model_trainer/checkpoints/best.pth
+```
+
 ## Project Structure
 
 The project follows a modular structure:
