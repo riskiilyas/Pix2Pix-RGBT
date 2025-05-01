@@ -97,30 +97,30 @@ class ModelTrainer:
         """
         Save some example outputs during training
         """
-        x, y = next(iter(dataloader))
-        x = x['A'].to(self.device)
-        y = x['B'].to(self.device)
+        batch = next(iter(dataloader))
+        real_A = batch['A'].to(self.device)
+        real_B = batch['B'].to(self.device)
         
         self.generator.eval()
         with torch.no_grad():
-            y_fake = self.generator(x)
+            fake_B = self.generator(real_A)
             # Rescale from [-1, 1] to [0, 1]
-            x = (x + 1) / 2
-            y = (y + 1) / 2
-            y_fake = (y_fake + 1) / 2
+            real_A = (real_A + 1) / 2
+            real_B = (real_B + 1) / 2
+            fake_B = (fake_B + 1) / 2
             
             # Concatenate images for visualization
-            for i in range(min(5, x.size(0))):
+            for i in range(min(5, real_A.size(0))):
                 # For thermal images (1 channel), repeat to 3 channels for proper visualization
                 if self.output_channels == 1:
-                    y_fake_rgb = y_fake[i].repeat(3, 1, 1)
-                    y_rgb = y[i].repeat(3, 1, 1)
+                    fake_B_rgb = fake_B[i].repeat(3, 1, 1)
+                    real_B_rgb = real_B[i].repeat(3, 1, 1)
                 else:
-                    y_fake_rgb = y_fake[i]
-                    y_rgb = y[i]
+                    fake_B_rgb = fake_B[i]
+                    real_B_rgb = real_B[i]
                 
                 # Concatenate images side by side
-                combined = torch.cat((x[i], y_fake_rgb, y_rgb), 2)
+                combined = torch.cat((real_A[i], fake_B_rgb, real_B_rgb), 2)
                 save_image(combined, os.path.join(self.config.root_dir, f"samples/{epoch}_{i}.png"))
         
         self.generator.train()
@@ -140,9 +140,14 @@ class ModelTrainer:
             real_A = batch['A'].to(self.device)  # Input image (RGB or Thermal)
             real_B = batch['B'].to(self.device)  # Target image (Thermal or RGB)
             
+            # Forward pass through discriminator to get output size
+            with torch.no_grad():
+                test_output = self.discriminator(real_A, real_B)
+                patch_h, patch_w = test_output.size(2), test_output.size(3)
+            
             # Adversarial ground truths (1 for real, 0 for fake)
-            valid = torch.ones((real_A.size(0), 1, 30, 30), requires_grad=False).to(self.device)
-            fake = torch.zeros((real_A.size(0), 1, 30, 30), requires_grad=False).to(self.device)
+            valid = torch.ones((real_A.size(0), 1, patch_h, patch_w), requires_grad=False).to(self.device)
+            fake = torch.zeros((real_A.size(0), 1, patch_h, patch_w), requires_grad=False).to(self.device)
             
             # -----------------
             # Train Generator
@@ -207,9 +212,13 @@ class ModelTrainer:
                 real_A = batch['A'].to(self.device)  # Input image
                 real_B = batch['B'].to(self.device)  # Target image
                 
+                # Get discriminator output size
+                test_output = self.discriminator(real_A, real_B)
+                patch_h, patch_w = test_output.size(2), test_output.size(3)
+                
                 # Adversarial ground truths
-                valid = torch.ones((real_A.size(0), 1, 30, 30), requires_grad=False).to(self.device)
-                fake = torch.zeros((real_A.size(0), 1, 30, 30), requires_grad=False).to(self.device)
+                valid = torch.ones((real_A.size(0), 1, patch_h, patch_w), requires_grad=False).to(self.device)
+                fake = torch.zeros((real_A.size(0), 1, patch_h, patch_w), requires_grad=False).to(self.device)
                 
                 # Generate fake images
                 fake_B = self.generator(real_A)
