@@ -1,7 +1,7 @@
-from ML_TEMPERATURE_PREDICTION.components.data_transformation import DataTransformation
-from ML_TEMPERATURE_PREDICTION.components.model_trainer import ModelTrainer
-from ML_TEMPERATURE_PREDICTION.config.configuration import ConfigurationManager
-from ML_TEMPERATURE_PREDICTION.logging import logger
+from src.ML_TEMPERATURE_PREDICTION.components.data_transformation import DataTransformation
+from src.ML_TEMPERATURE_PREDICTION.components.model_trainer import ModelTrainer
+from src.ML_TEMPERATURE_PREDICTION.config.configuration import ConfigurationManager
+from src.ML_TEMPERATURE_PREDICTION.logging import logger
 
 class ModelTrainingPipeline:
     def __init__(self):

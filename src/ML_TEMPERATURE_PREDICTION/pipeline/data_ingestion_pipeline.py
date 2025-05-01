@@ -1,6 +1,6 @@
-from ML_TEMPERATURE_PREDICTION.components.data_ingestion import DataIngestion
-from ML_TEMPERATURE_PREDICTION.config.configuration import ConfigurationManager
-from ML_TEMPERATURE_PREDICTION.logging import logger
+from src.ML_TEMPERATURE_PREDICTION.components.data_ingestion import DataIngestion
+from src.ML_TEMPERATURE_PREDICTION.config.configuration import ConfigurationManager
+from src.ML_TEMPERATURE_PREDICTION.logging import logger
 
 class DataIngestionPipeline:
     def __init__(self):

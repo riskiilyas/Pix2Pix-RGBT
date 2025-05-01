@@ -1,6 +1,6 @@
-from ML_TEMPERATURE_PREDICTION.components.model_evaluation import ModelEvaluation
-from ML_TEMPERATURE_PREDICTION.config.configuration import ConfigurationManager
-from ML_TEMPERATURE_PREDICTION.logging import logger
+from src.ML_TEMPERATURE_PREDICTION.components.model_evaluation import ModelEvaluation
+from src.ML_TEMPERATURE_PREDICTION.config.configuration import ConfigurationManager
+from src.ML_TEMPERATURE_PREDICTION.logging import logger
 
 class PredictionPipeline:
     def __init__(self):

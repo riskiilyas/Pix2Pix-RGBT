@@ -1,14 +1,14 @@
 import os
 from pathlib import Path
-from ML_TEMPERATURE_PREDICTION.utils.common import read_yaml, create_directories
-from ML_TEMPERATURE_PREDICTION.entity.config_entity import (
+from src.ML_TEMPERATURE_PREDICTION.utils.common import read_yaml, create_directories
+from src.ML_TEMPERATURE_PREDICTION.entity.config_entity import (
     DataIngestionConfig,
     DataTransformationConfig,
     ModelTrainerConfig,
     ModelEvaluationConfig,
     PredictionConfig
 )
-from ML_TEMPERATURE_PREDICTION.constants import CONFIG_FILE_PATH, PARAMS_FILE_PATH
+from src.ML_TEMPERATURE_PREDICTION.constants import CONFIG_FILE_PATH, PARAMS_FILE_PATH
 
 class ConfigurationManager:
     """

@@ -1,8 +1,8 @@
 import os
 import shutil
 from pathlib import Path
-from ML_TEMPERATURE_PREDICTION.entity.config_entity import DataIngestionConfig
-from ML_TEMPERATURE_PREDICTION.logging import logger
+from src.ML_TEMPERATURE_PREDICTION.entity.config_entity import DataIngestionConfig
+from src.ML_TEMPERATURE_PREDICTION.logging import logger
 import splitfolders
 
 class DataIngestion:

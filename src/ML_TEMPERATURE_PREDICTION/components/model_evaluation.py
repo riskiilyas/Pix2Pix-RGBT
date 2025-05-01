@@ -8,9 +8,9 @@ import torchvision.transforms as transforms
 from PIL import Image
 import tifffile
 from tqdm import tqdm
-from ML_TEMPERATURE_PREDICTION.entity.config_entity import ModelEvaluationConfig
-from ML_TEMPERATURE_PREDICTION.components.pix2pix_model import Generator
-from ML_TEMPERATURE_PREDICTION.logging import logger
+from src.ML_TEMPERATURE_PREDICTION.entity.config_entity import ModelEvaluationConfig
+from src.ML_TEMPERATURE_PREDICTION.components.pix2pix_model import Generator
+from src.ML_TEMPERATURE_PREDICTION.logging import logger
 
 class ModelEvaluation:
     """

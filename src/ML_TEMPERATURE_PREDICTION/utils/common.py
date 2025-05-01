@@ -6,7 +6,7 @@ from box import ConfigBox
 from pathlib import Path
 from typing import Any, Dict, List
 import torch
-from ML_TEMPERATURE_PREDICTION.logging import logger
+from src.ML_TEMPERATURE_PREDICTION.logging import logger
 
 def read_yaml(path_to_yaml: Path) -> ConfigBox:
     """

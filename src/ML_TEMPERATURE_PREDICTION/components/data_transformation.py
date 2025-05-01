@@ -4,8 +4,8 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 from PIL import Image
 import numpy as np
-from ML_TEMPERATURE_PREDICTION.entity.config_entity import DataTransformationConfig
-from ML_TEMPERATURE_PREDICTION.logging import logger
+from src.ML_TEMPERATURE_PREDICTION.entity.config_entity import DataTransformationConfig
+from src.ML_TEMPERATURE_PREDICTION.logging import logger
 import tifffile
 
 class RGBThermalDataset(Dataset):

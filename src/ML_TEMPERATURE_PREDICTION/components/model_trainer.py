@@ -6,9 +6,9 @@ from torchvision.utils import save_image
 import time
 import numpy as np
 from tqdm import tqdm
-from ML_TEMPERATURE_PREDICTION.entity.config_entity import ModelTrainerConfig
-from ML_TEMPERATURE_PREDICTION.components.pix2pix_model import Generator, Discriminator
-from ML_TEMPERATURE_PREDICTION.logging import logger
+from src.ML_TEMPERATURE_PREDICTION.entity.config_entity import ModelTrainerConfig
+from src.ML_TEMPERATURE_PREDICTION.components.pix2pix_model import Generator, Discriminator
+from src.ML_TEMPERATURE_PREDICTION.logging import logger
 
 class ModelTrainer:
     """
