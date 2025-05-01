@@ -45,6 +45,14 @@ class UNetUp(nn.Module):
     
     def forward(self, x, skip_input):
         x = self.model(x)
+        # Add padding if necessary to match dimensions
+        if x.shape != skip_input.shape:
+            # Calculate padding needed
+            diffY = skip_input.size()[2] - x.size()[2]
+            diffX = skip_input.size()[3] - x.size()[3]
+            
+            x = F.pad(x, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
+        
         x = torch.cat((x, skip_input), 1)
         
         return x
@@ -57,10 +65,7 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
         
         # Initial layer
-        self.down1 = nn.Sequential(
-            nn.Conv2d(in_channels, 64, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2)
-        )
+        self.down1 = UNetDown(in_channels, 64, normalize=False)
         # Downsampling layers
         self.down2 = UNetDown(64, 128)
         self.down3 = UNetDown(128, 256)
@@ -71,12 +76,7 @@ class Generator(nn.Module):
         self.down8 = UNetDown(512, 512, normalize=False, dropout=0.5)
         
         # Upsampling layers
-        self.up1 = nn.Sequential(
-            nn.ConvTranspose2d(512, 512, kernel_size=4, stride=2, padding=1, bias=False),
-            nn.InstanceNorm2d(512),
-            nn.ReLU(inplace=True),
-            nn.Dropout(0.5)
-        )
+        self.up1 = UNetUp(512, 512, dropout=0.5)
         self.up2 = UNetUp(1024, 512, dropout=0.5)
         self.up3 = UNetUp(1024, 512, dropout=0.5)
         self.up4 = UNetUp(1024, 512, dropout=0.5)
@@ -102,13 +102,13 @@ class Generator(nn.Module):
         d8 = self.down8(d7)
         
         # Upsampling
-        u1 = self.up1(d8)
-        u2 = self.up2(u1, d7)
-        u3 = self.up3(u2, d6)
-        u4 = self.up4(u3, d5)
-        u5 = self.up5(u4, d4)
-        u6 = self.up6(u5, d3)
-        u7 = self.up7(u6, d2)
+        u1 = self.up1(d8, d7)
+        u2 = self.up2(u1, d6)
+        u3 = self.up3(u2, d5)
+        u4 = self.up4(u3, d4)
+        u5 = self.up5(u4, d3)
+        u6 = self.up6(u5, d2)
+        u7 = self.up7(u6, d1)
         
         return self.final(u7)
 
