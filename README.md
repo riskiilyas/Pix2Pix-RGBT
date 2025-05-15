@@ -1,6 +1,6 @@
 # RGB-Thermal Image Translation using Pix2Pix
 
-This project implements a Pix2Pix GAN model for translating between RGB and thermal images. The model can be trained to translate RGB images to thermal images (rgb2thermal) or thermal images to RGB images (thermal2rgb).
+This project implements a Pix2Pix GAN model for translating between RGB and thermal images. The model can be trained to translate RGB images to thermal images (rgb2thermal) or thermal images to RGB images (thermal2rgb). It also features a REST API server for integrating with other applications.
 
 ## Download the Pre-trained Model
 
@@ -40,6 +40,7 @@ ML_TEMPERATURE_PREDICTION/
 │       └── utils/           # Utility functions
 ├── app.py                   # Streamlit web application
 ├── main.py                  # Main entry point
+├── server.py                # Flask API server
 ├── params.yaml              # Model parameters
 ├── requirements.txt         # Dependencies
 └── setup.py                 # Package setup
@@ -107,6 +108,131 @@ The web interface allows you to:
 - Upload an image for translation
 - View the input and generated output
 - Download the result
+
+## REST API Server
+
+The project includes a Flask-based REST API server that can be used to integrate the thermal prediction functionality with other applications.
+
+### Starting the API Server
+
+```bash
+python server.py
+```
+
+By default, the server runs on `http://localhost:5000`.
+
+### API Endpoints
+
+#### 1. Health Check
+```
+GET /health
+```
+Returns the status of the server and whether the model is loaded.
+
+#### 2. Generate Prediction
+```
+POST /predict
+```
+Parameters (form-data):
+- `image`: RGB image file (JPG/PNG) - required
+- `user_id`: User identifier - optional
+- `monitoring_id`: Monitoring session identifier - optional
+
+Returns:
+```json
+{
+  "prediction_id": "unique-id",
+  "user_id": "user123",
+  "monitoring_id": "session456",
+  "temperature_stats": {
+    "center": 28.75,
+    "mean": 28.92,
+    "min": 28.01,
+    "max": 29.85
+  },
+  "image_urls": {
+    "rgb_input": "/images/unique-id/rgb_input.jpg",
+    "thermal_colored": "/images/unique-id/thermal_viz.png",
+    "grayscale": "/images/unique-id/grayscale_8bit.png",
+    "temperature_map": "/images/unique-id/temperature_map.png"
+  }
+}
+```
+
+#### 3. Get Image
+```
+GET /images/{prediction_id}/{image_name}
+```
+Returns the actual image file (JPEG or PNG).
+
+Valid image names:
+- `rgb_input.jpg`: Original RGB input
+- `thermal_viz.png`: Thermal visualization
+- `grayscale_8bit.png`: Grayscale thermal
+- `temperature_map.png`: Temperature distribution map
+
+#### 4. Get Prediction by ID
+```
+GET /prediction/{prediction_id}
+```
+Query Parameters:
+- `include_images`: Set to "true" to include base64-encoded image data (default: false)
+
+Returns the prediction details for a specific ID.
+
+#### 5. Get Predictions by User ID
+```
+GET /predictions/user/{user_id}
+```
+Returns all predictions for a specific user.
+
+#### 6. Get Predictions by Monitoring ID
+```
+GET /predictions/monitoring/{monitoring_id}
+```
+Returns all predictions for a specific monitoring session.
+
+### Database Options
+
+The API server supports two database options:
+
+#### 1. MongoDB (Default)
+By default, the server uses MongoDB to store prediction results. You can connect to:
+
+- **Local MongoDB**: 
+  ```python
+  app.config["MONGO_URI"] = "mongodb://localhost:27017/thermal_predictions"
+  ```
+
+- **MongoDB Atlas (Cloud)**:
+  ```python
+  app.config["MONGO_URI"] = "mongodb+srv://<username>:<password>@<cluster>.mongodb.net/thermal_predictions?retryWrites=true&w=majority"
+  ```
+
+#### 2. File Storage (Alternative)
+If MongoDB is not available, you can modify the server to use file-based storage:
+```python
+# Add FileStorage class implementation
+mongo = type('obj', (object,), {'db': FileStorage()})
+```
+
+## Testing the API
+
+You can test the API using:
+
+1. The included Postman collection
+2. The HTML client example
+3. Curl commands:
+   ```bash
+   # Health check
+   curl http://localhost:5000/health
+   
+   # Generate prediction
+   curl -X POST -F "image=@input/example.jpg" -F "user_id=user123" http://localhost:5000/predict
+   
+   # Get prediction
+   curl http://localhost:5000/prediction/YOUR_PREDICTION_ID
+   ```
 
 ## Model Architecture
 
