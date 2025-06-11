@@ -32,8 +32,7 @@ class ModelEvaluation:
             self.output_channels = 3
         
         # Initialize model
-        self.generator = Generator(in_channels=self.input_channels, out_channels=self.output_channels).to(self.device)
-        
+        self.generator = Generator(in_channels=self.input_channels, out_channels=self.output_channels, filters=64).to(self.device)        
         # Load the best model if available
         self.load_model()
     
