@@ -1,17 +1,38 @@
-torch>=1.7.0
-torchvision>=0.8.1
-numpy>=1.19.2
-Pillow>=8.0.0
-tifffile>=2021.7.2
-PyYAML>=5.3.1
-tqdm>=4.50.2
-joblib>=0.17.0
-python-box>=6.0.2
-matplotlib>=3.3.2
-split-folders>=0.4.3
-scikit-image>=0.18.1
-pymongo>=4.0.0
-flask>=2.0.0
-flask-cors>=3.0.10
-flask-pymongo>=2.3.0
-opencv-python>=4.5.0
+# Flask and web framework
+flask==2.3.3
+flask-cors==4.0.1
+flask-pymongo==2.3.0
+gunicorn==21.2.0
+
+# Database
+pymongo==4.6.0
+
+# Image processing and computer vision
+pillow==10.1.0
+opencv-python-headless==4.8.1.78
+numpy==1.24.4
+
+# Data visualization
+matplotlib==3.7.3
+
+# Hugging Face integration
+gradio-client==0.8.1
+requests==2.31.0
+huggingface-hub==0.19.4
+
+# Environment and configuration
+python-dotenv==1.0.0
+
+# Image format support
+tifffile==2023.9.26
+
+# Logging (built-in, but ensure compatibility)
+# logging - built-in
+
+# Development tools (optional, comment out for production)
+# ipython==8.17.2
+# jupyter==1.0.0
+
+# System compatibility
+setuptools==68.2.2
+wheel==0.41.3
