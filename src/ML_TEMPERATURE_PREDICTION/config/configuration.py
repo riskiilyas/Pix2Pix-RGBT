@@ -107,7 +107,8 @@ class ConfigurationManager:
             optimizer=self.params.OPTIMIZER,
             beta1=self.params.BETA1,
             beta2=self.params.BETA2,
-            weight_decay=self.params.WEIGHT_DECAY,
+            # weight_decay=self.params.WEIGHT_DECAY,
+            weight_decay=float(getattr(self.params, 'WEIGHT_DECAY', 1e-4)),  # Explicit float conversion
             # Mixed precision
             use_amp=self.params.USE_AMP
         )
