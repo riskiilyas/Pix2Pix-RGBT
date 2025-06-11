@@ -1,3 +1,4 @@
+# Update file pix2pix_model.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -59,12 +60,11 @@ class UNetUp(nn.Module):
 
 class Generator(nn.Module):
     """
-    Generator architecture (modified UNet)
+    Enhanced Generator architecture (modified UNet) with configurable filters
     """
     def __init__(self, in_channels=3, out_channels=1, filters=64):
         super(Generator, self).__init__()
         
-        # Use filters parameter for base filter count
         # Initial layer
         self.down1 = UNetDown(in_channels, filters, normalize=False)
         # Downsampling layers
@@ -115,14 +115,14 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
     """
-    Discriminator architecture (PatchGAN)
+    Enhanced Discriminator architecture (PatchGAN) with configurable filters
     """
-    def __init__(self, in_channels=3, out_channels=1):
+    def __init__(self, in_channels=3, out_channels=1, filters=64):
         super(Discriminator, self).__init__()
         
         # Input: A + B (concatenated)
-        # For RGB to Thermal: A=RGB (3 channels), B=Thermal (1 channel) => in_channels = 4
-        # For Thermal to RGB: A=Thermal (1 channel), B=RGB (3 channels) => in_channels = 4
+        # For RGB to Thermal: A=RGB (3 channels), B=Thermal (1 channel) => total = 4
+        # For Thermal to RGB: A=Thermal (1 channel), B=RGB (3 channels) => total = 4
         total_input_channels = in_channels + out_channels
         
         def discriminator_block(in_filters, out_filters, normalize=True):
@@ -135,16 +135,16 @@ class Discriminator(nn.Module):
         
         self.model = nn.Sequential(
             # Input layer
-            *discriminator_block(total_input_channels, 64, normalize=False),
+            *discriminator_block(total_input_channels, filters, normalize=False),
             
-            # Middle layers
-            *discriminator_block(64, 128),
-            *discriminator_block(128, 256),
-            *discriminator_block(256, 512),
+            # Middle layers - using configurable filters
+            *discriminator_block(filters, filters*2),
+            *discriminator_block(filters*2, filters*4),
+            *discriminator_block(filters*4, filters*8),
             
             # Output layer
             nn.ZeroPad2d((1, 0, 1, 0)),
-            nn.Conv2d(512, 1, kernel_size=4, padding=1, bias=False)
+            nn.Conv2d(filters*8, 1, kernel_size=4, padding=1, bias=False)
         )
     
     def forward(self, img_A, img_B):

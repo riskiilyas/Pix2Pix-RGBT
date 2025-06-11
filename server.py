@@ -29,7 +29,6 @@ CORS(app)
 
 # Configure MongoDB
 # app.config["MONGO_URI"] = os.environ.get("MONGO_URL", "mongodb://localhost:27017/thermal_predictions")
-app.config["MONGO_URI"] = "mongodb+srv://riskiilyas:riskiaja@cluster0.ydfb4hk.mongodb.net/thermal_predictions?retryWrites=true&w=majority&appName=Cluster0"
 mongo = PyMongo(app)
 
 # Load configuration
