@@ -255,13 +255,38 @@ class ModelTrainer:
                 real_B = batch['B'].to(self.device)
                 batch_size = real_A.size(0)
                 
-                # Similar validation logic as before
-                # ... (keeping existing validation code)
+                # Get discriminator output size
+                test_output = self.discriminator(real_A, real_B)
+                patch_h, patch_w = test_output.size(2), test_output.size(3)
+                
+                # Adversarial ground truths
+                valid = torch.ones((batch_size, 1, patch_h, patch_w), requires_grad=False).to(self.device)
+                fake = torch.zeros((batch_size, 1, patch_h, patch_w), requires_grad=False).to(self.device)
+                
+                # Generate fake images
+                fake_B = self.generator(real_A)
+                
+                # Generator loss
+                pred_fake = self.discriminator(real_A, fake_B)
+                loss_GAN = self.criterion_GAN(pred_fake, valid) * self.lambda_gan
+                loss_pixel = self.criterion_pixelwise(fake_B, real_B) * self.lambda_pixel
+                loss_G = loss_GAN + loss_pixel
+                
+                # Discriminator loss
+                pred_real = self.discriminator(real_A, real_B)
+                loss_real = self.criterion_GAN(pred_real, valid)
+                
+                pred_fake = self.discriminator(real_A, fake_B)
+                loss_fake = self.criterion_GAN(pred_fake, fake)
+                
+                loss_D = (loss_real + loss_fake) / 2
+                
+                # Update running losses
+                val_g_loss += loss_G.item()
+                val_d_loss += loss_D.item()
         
-        avg_val_g_loss = val_g_loss / len(val_loader)
-        avg_val_d_loss = val_d_loss / len(val_loader)
-        
-        return avg_val_g_loss, avg_val_d_loss
+        # Return average losses
+        return val_g_loss / len(val_loader), val_d_loss / len(val_loader)
     
     def train(self, train_loader, val_loader):
         """Enhanced training loop with all new features"""
