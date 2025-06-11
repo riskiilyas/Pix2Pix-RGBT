@@ -10,6 +10,7 @@ from tqdm import tqdm
 from src.ML_TEMPERATURE_PREDICTION.entity.config_entity import ModelTrainerConfig
 from src.ML_TEMPERATURE_PREDICTION.components.pix2pix_model import Generator, Discriminator
 from src.ML_TEMPERATURE_PREDICTION.logging import logger
+from torch.utils.tensorboard import SummaryWriter
 
 class ModelTrainer:
     """
@@ -82,6 +83,12 @@ class ModelTrainer:
         
         # Mixed precision scaler
         self.scaler = torch.cuda.amp.GradScaler() if self.config.use_amp else None
+
+        self.tensorboard_dir = os.path.join(self.config.root_dir, 'tensorboard_logs')
+        os.makedirs(self.tensorboard_dir, exist_ok=True)
+        self.writer = SummaryWriter(log_dir=self.tensorboard_dir)
+        
+        logger.info(f"TensorBoard logs will be saved to: {self.tensorboard_dir}")
         
         # Load checkpoint if available
         self.load_checkpoint()
@@ -323,6 +330,11 @@ class ModelTrainer:
                 logger.info(f"New best validation loss: {self.best_val_loss:.4f}")
             else:
                 self.patience_counter += 1
+
+            self.log_to_tensorboard(epoch, train_g_loss, train_d_loss, 
+                        val_g_loss, val_d_loss, current_lr)
+            
+            self.log_sample_images(epoch, val_loader)
             
             # Save checkpoint
             self.save_checkpoint(epoch, is_best)
@@ -339,6 +351,58 @@ class ModelTrainer:
         logger.info("Enhanced training completed!")
     
     
+    def log_to_tensorboard(self, epoch, train_g_loss, train_d_loss, 
+                          val_g_loss, val_d_loss, lr):
+        """Log metrics to TensorBoard"""
+        # Loss curves
+        self.writer.add_scalar('Generator/Train_Loss', train_g_loss, epoch)
+        self.writer.add_scalar('Generator/Val_Loss', val_g_loss, epoch)
+        self.writer.add_scalar('Discriminator/Train_Loss', train_d_loss, epoch)
+        self.writer.add_scalar('Discriminator/Val_Loss', val_d_loss, epoch)
+        
+        # Learning rate
+        self.writer.add_scalar('Training/Learning_Rate', lr, epoch)
+        
+        # Combined loss plot
+        self.writer.add_scalars('Combined_Losses', {
+            'Train_G': train_g_loss,
+            'Val_G': val_g_loss,
+            'Train_D': train_d_loss,
+            'Val_D': val_d_loss
+        }, epoch)
+    
+    def log_sample_images(self, epoch, val_loader):
+        """Log sample images to TensorBoard"""
+        batch = next(iter(val_loader))
+        real_A = batch['A'][:4].to(self.device)  # RGB input
+        real_B = batch['B'][:4].to(self.device)  # Thermal target
+        
+        self.generator.eval()
+        with torch.no_grad():
+            fake_B = self.generator(real_A)  # Generated thermal
+            
+            # Rescale from [-1, 1] to [0, 1]
+            real_A = (real_A + 1) / 2
+            real_B = (real_B + 1) / 2  
+            fake_B = (fake_B + 1) / 2
+            
+            # Log images
+            self.writer.add_images('Input/RGB', real_A, epoch)
+            self.writer.add_images('Generated/Thermal', fake_B.repeat(1,3,1,1), epoch)
+            self.writer.add_images('Target/Thermal', real_B.repeat(1,3,1,1), epoch)
+            
+            # Side-by-side comparison
+            comparison = torch.cat([real_A, fake_B.repeat(1,3,1,1), real_B.repeat(1,3,1,1)], dim=3)
+            self.writer.add_images('Comparison/RGB_Generated_Target', comparison, epoch)
+        
+        self.generator.train()
+    
+    def __del__(self):
+        """Close TensorBoard writer"""
+        if hasattr(self, 'writer'):
+            self.writer.close()
+
+
     def save_some_examples(self, epoch, dataloader):
         """
         Save some example outputs during training
