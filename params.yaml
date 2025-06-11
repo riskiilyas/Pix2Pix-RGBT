@@ -6,7 +6,7 @@ RANDOM_STATE: 42
 
 # Data preprocessing - Enhanced
 IMAGE_SIZE: 256
-BATCH_SIZE: 8  # Reduced for better gradient stability
+BATCH_SIZE: 16  # Reduced for better gradient stability
 NUM_WORKERS: 2
 DATA_AUGMENTATION: true  # Enable data augmentation
 NORMALIZE_MEAN: [0.5, 0.5, 0.5]
@@ -15,27 +15,27 @@ NORMALIZE_STD: [0.5, 0.5, 0.5]
 # Model parameters - Optimized
 DIRECTION: "rgb2thermal"
 NUM_EPOCHS: 500  # Increased significantly
-LEARNING_RATE: 0.0002  # Start rate
+LEARNING_RATE: 0.0005  # Start rate
 LR_SCHEDULER: "step"  # Add learning rate scheduler
-LR_STEP_SIZE: 100  # Decay every 100 epochs
-LR_GAMMA: 0.5  # Decay factor
+LR_STEP_SIZE: 50  # Decay every 100 epochs
+LR_GAMMA: 0.7  # Decay factor
 
 # Loss function weights - Enhanced
-LAMBDA_PIXEL: 200  # Increased L1 loss weight
-LAMBDA_PERCEPTUAL: 10  # Add perceptual loss
+LAMBDA_PIXEL: 100  # Increased L1 loss weight
+LAMBDA_PERCEPTUAL: 50  # Add perceptual loss
 LAMBDA_GAN: 1  # GAN loss weight
 
 # Training strategy - Advanced
 EARLY_STOPPING: true
 PATIENCE: 50  # Stop if no improvement for 50 epochs
 SAVE_FREQUENCY: 20  # Save checkpoint every 20 epochs
-WARMUP_EPOCHS: 10  # Learning rate warmup
+WARMUP_EPOCHS: 20  # Learning rate warmup
 
 # Model architecture - Enhanced
 GENERATOR_FILTERS: 64  # Base number of filters
-DISCRIMINATOR_FILTERS: 64
+DISCRIMINATOR_FILTERS: 128
 DROPOUT_RATE: 0.5
-USE_ATTENTION: false  # Can be enabled for better results
+USE_ATTENTION: true  # Can be enabled for better results
 
 # Optimizer settings - Fine-tuned
 OPTIMIZER: "Adam"
