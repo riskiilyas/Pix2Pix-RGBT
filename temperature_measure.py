@@ -318,7 +318,7 @@ def analyze_thermal_image(thermal_path, rgb_path=None, min_temp=28, max_temp=30,
 
 # Example execution
 if __name__ == "__main__":
-    name_image = "test18"
+    name_image = "test7"
 
     thermal_path = f"output/{name_image}.tiff"
     rgb_path = f"input/{name_image}.jpg"

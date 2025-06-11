@@ -28,7 +28,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Configure MongoDB
-# app.config["MONGO_URI"] = os.environ.get("MONGO_URI", "mongodb://localhost:27017/thermal_predictions")
+# app.config["MONGO_URI"] = os.environ.get("MONGO_URL", "mongodb://localhost:27017/thermal_predictions")
 app.config["MONGO_URI"] = "mongodb+srv://riskiilyas:riskiaja@cluster0.ydfb4hk.mongodb.net/thermal_predictions?retryWrites=true&w=majority&appName=Cluster0"
 mongo = PyMongo(app)
 
@@ -85,6 +85,33 @@ def save_figure_to_bytes(figure):
     buf.seek(0)
     return base64.b64encode(buf.read()).decode('utf-8')
 
+def validate_image_file(file):
+    """Validate if the uploaded file is a valid image"""
+    # Check file extension
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff'}
+    file_extension = file.filename.lower().split('.')[-1] if '.' in file.filename else ''
+    
+    if file_extension not in allowed_extensions:
+        return False, 'Invalid file extension. Allowed: PNG, JPG, JPEG, GIF, BMP, TIFF'
+    
+    # Check content type
+    if not file.content_type or not file.content_type.startswith('image/'):
+        return False, 'Invalid content type. Please upload an image file'
+    
+    # Check file size (optional - add max size limit)
+    file.seek(0, 2)  # Seek to end
+    file_size = file.tell()
+    file.seek(0)  # Reset to beginning
+    
+    max_size = 10 * 1024 * 1024  # 10MB limit
+    if file_size > max_size:
+        return False, 'File too large. Maximum size: 10MB'
+    
+    if file_size == 0:
+        return False, 'Empty file uploaded'
+    
+    return True, 'Valid image file'
+
 @app.route('/predict', methods=['POST'])
 def predict():
     """Generate a thermal prediction from an RGB image"""
@@ -96,6 +123,11 @@ def predict():
         rgb_file = request.files['image']
         if rgb_file.filename == '':
             return jsonify({'error': 'No image selected'}), 400
+        
+        # Validate the uploaded file
+        is_valid, message = validate_image_file(rgb_file)
+        if not is_valid:
+            return jsonify({'error': message}), 400
         
         # Get optional user_id and monitoring_id
         user_id = request.form.get('user_id', 'anonymous')
@@ -110,13 +142,35 @@ def predict():
             rgb_path = os.path.join(temp_dir, f"rgb_input.jpg")
             rgb_file.save(rgb_path)
             
+            # Additional image validation after saving
+            try:
+                # Try to open and validate the image
+                rgb_image = Image.open(rgb_path).convert('RGB')
+                # Verify it's a valid image by getting its size
+                width, height = rgb_image.size
+                if width == 0 or height == 0:
+                    return jsonify({'error': 'Invalid image file - image has no dimensions'}), 400
+                
+                # Check minimum image dimensions (optional)
+                min_dimension = 32  # Minimum 32x32 pixels
+                if width < min_dimension or height < min_dimension:
+                    return jsonify({'error': f'Image too small. Minimum size: {min_dimension}x{min_dimension} pixels'}), 400
+                    
+            except Exception as img_error:
+                return jsonify({'error': f'Invalid image file - cannot process as image: {str(img_error)}'}), 400
+            
             # Process the RGB image
-            rgb_image = Image.open(rgb_path).convert('RGB')
-            input_tensor = transform(rgb_image).unsqueeze(0).to(device)
+            try:
+                input_tensor = transform(rgb_image).unsqueeze(0).to(device)
+            except Exception as transform_error:
+                return jsonify({'error': f'Error processing image: {str(transform_error)}'}), 400
             
             # Generate thermal image
-            with torch.no_grad():
-                output_tensor = model(input_tensor)
+            try:
+                with torch.no_grad():
+                    output_tensor = model(input_tensor)
+            except Exception as model_error:
+                return jsonify({'error': f'Error generating thermal prediction: {str(model_error)}'}), 500
             
             # Denormalize output tensor
             output_tensor = (output_tensor + 1) / 2
@@ -128,62 +182,77 @@ def predict():
             # Save thermal image to temp directory
             thermal_path = os.path.join(temp_dir, f"thermal_output.tiff")
             
-            # Import tifffile here to avoid issues with matplotlib
-            import tifffile
-            tifffile.imwrite(thermal_path, thermal_array)
+            try:
+                # Import tifffile here to avoid issues with matplotlib
+                import tifffile
+                tifffile.imwrite(thermal_path, thermal_array)
+            except Exception as tiff_error:
+                return jsonify({'error': f'Error saving thermal image: {str(tiff_error)}'}), 500
             
             # Analyze thermal image using ThermalImageAnalyzer
-            analyzer = ThermalImageAnalyzer(
-                thermal_image_path=thermal_path,
-                rgb_image_path=rgb_path,
-                assumed_min_temp=28,
-                assumed_max_temp=30
-            )
-            
-            # Get visualization results without displaying them
-            visualizations = analyzer.get_results()
+            try:
+                analyzer = ThermalImageAnalyzer(
+                    thermal_image_path=thermal_path,
+                    rgb_image_path=rgb_path,
+                    assumed_min_temp=28,
+                    assumed_max_temp=30
+                )
+                
+                # Get visualization results without displaying them
+                visualizations = analyzer.get_results()
+            except Exception as analyzer_error:
+                return jsonify({'error': f'Error analyzing thermal image: {str(analyzer_error)}'}), 500
             
             # Save visualization images to temp directory
             thermal_colored_path = os.path.join(temp_dir, "thermal_viz.png")
             grayscale_path = os.path.join(temp_dir, "grayscale_8bit.png")
             
-            import cv2
-            cv2.imwrite(thermal_colored_path, visualizations['visualizations']['thermal_with_markers'])
-            cv2.imwrite(grayscale_path, visualizations['visualizations']['grayscale'])
+            try:
+                import cv2
+                cv2.imwrite(thermal_colored_path, visualizations['visualizations']['thermal_with_markers'])
+                cv2.imwrite(grayscale_path, visualizations['visualizations']['grayscale'])
+            except Exception as cv2_error:
+                return jsonify({'error': f'Error saving visualization images: {str(cv2_error)}'}), 500
             
             # Save temperature map
-            plt.figure(figsize=(8, 6))
-            plt.imshow(visualizations['temp_scale'], cmap=analyzer.get_custom_colormap())
-            plt.colorbar(label='Estimated Temperature (°C)')
-            plt.axis('off')
-            plt.tight_layout()
-            
-            temp_map_path = os.path.join(temp_dir, "temperature_map.png")
-            plt.savefig(temp_map_path)
-            plt.close()
+            try:
+                plt.figure(figsize=(8, 6))
+                plt.imshow(visualizations['temp_scale'], cmap=analyzer.get_custom_colormap())
+                plt.colorbar(label='Estimated Temperature (°C)')
+                plt.axis('off')
+                plt.tight_layout()
+                
+                temp_map_path = os.path.join(temp_dir, "temperature_map.png")
+                plt.savefig(temp_map_path)
+                plt.close()
+            except Exception as plt_error:
+                return jsonify({'error': f'Error creating temperature map: {str(plt_error)}'}), 500
             
             # Create document for MongoDB
-            prediction_doc = {
-                'prediction_id': prediction_id,
-                'user_id': user_id,
-                'monitoring_id': monitoring_id,
-                'timestamp': datetime.now(),
-                'temperature_stats': {
-                    'center': float(visualizations['stats']['center']),
-                    'mean': float(visualizations['stats']['mean']),
-                    'min': float(visualizations['stats']['min']),
-                    'max': float(visualizations['stats']['max'])
-                },
-                'images': {
-                    'rgb_input': encode_image_to_base64(rgb_path),
-                    'thermal_colored': encode_image_to_base64(thermal_colored_path),
-                    'grayscale': encode_image_to_base64(grayscale_path),
-                    'temperature_map': encode_image_to_base64(temp_map_path)
+            try:
+                prediction_doc = {
+                    'prediction_id': prediction_id,
+                    'user_id': user_id,
+                    'monitoring_id': monitoring_id,
+                    'timestamp': datetime.now(),
+                    'temperature_stats': {
+                        'center': float(visualizations['stats']['center']),
+                        'mean': float(visualizations['stats']['mean']),
+                        'min': float(visualizations['stats']['min']),
+                        'max': float(visualizations['stats']['max'])
+                    },
+                    'images': {
+                        'rgb_input': encode_image_to_base64(rgb_path),
+                        'thermal_colored': encode_image_to_base64(thermal_colored_path),
+                        'grayscale': encode_image_to_base64(grayscale_path),
+                        'temperature_map': encode_image_to_base64(temp_map_path)
+                    }
                 }
-            }
-            
-            # Insert document into MongoDB
-            mongo.db.predictions.insert_one(prediction_doc)
+                
+                # Insert document into MongoDB
+                mongo.db.predictions.insert_one(prediction_doc)
+            except Exception as db_error:
+                return jsonify({'error': f'Error saving to database: {str(db_error)}'}), 500
             
             # Create image URLs for the response
             image_urls = {
@@ -210,7 +279,7 @@ def predict():
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Unexpected server error: {str(e)}'}), 500
 
 @app.route('/predictions/user/<user_id>', methods=['GET'])
 def get_predictions_by_user(user_id):
@@ -270,16 +339,11 @@ def get_predictions_by_monitoring(monitoring_id):
 
 @app.route('/prediction/<prediction_id>', methods=['GET'])
 def get_prediction(prediction_id):
-    """Get a specific prediction by ID"""
     try:
-        include_images = request.args.get('include_images', 'false').lower() == 'true'
-        
-        # Define projection based on whether images should be included
-        projection = None if include_images else {'images': 0}
-        
+        # Always exclude images, use image_urls instead
         prediction = mongo.db.predictions.find_one(
             {'prediction_id': prediction_id},
-            projection
+            {'images': 0}  # Always exclude images
         )
         
         if not prediction:
@@ -287,6 +351,14 @@ def get_prediction(prediction_id):
         
         # Convert ObjectId to string
         prediction['_id'] = str(prediction['_id'])
+        
+        # Add image URLs
+        prediction['image_urls'] = {
+            'rgb_input': f"/images/{prediction_id}/rgb_input.jpg",
+            'thermal_colored': f"/images/{prediction_id}/thermal_viz.png",
+            'grayscale': f"/images/{prediction_id}/grayscale_8bit.png",
+            'temperature_map': f"/images/{prediction_id}/temperature_map.png"
+        }
         
         return jsonify(prediction), 200
     

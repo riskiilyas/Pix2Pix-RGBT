@@ -61,32 +61,33 @@ class Generator(nn.Module):
     """
     Generator architecture (modified UNet)
     """
-    def __init__(self, in_channels=3, out_channels=1):
+    def __init__(self, in_channels=3, out_channels=1, filters=64):
         super(Generator, self).__init__()
         
+        # Use filters parameter for base filter count
         # Initial layer
-        self.down1 = UNetDown(in_channels, 64, normalize=False)
+        self.down1 = UNetDown(in_channels, filters, normalize=False)
         # Downsampling layers
-        self.down2 = UNetDown(64, 128)
-        self.down3 = UNetDown(128, 256)
-        self.down4 = UNetDown(256, 512, dropout=0.5)
-        self.down5 = UNetDown(512, 512, dropout=0.5)
-        self.down6 = UNetDown(512, 512, dropout=0.5)
-        self.down7 = UNetDown(512, 512, dropout=0.5)
-        self.down8 = UNetDown(512, 512, normalize=False, dropout=0.5)
+        self.down2 = UNetDown(filters, filters*2)
+        self.down3 = UNetDown(filters*2, filters*4)
+        self.down4 = UNetDown(filters*4, filters*8, dropout=0.5)
+        self.down5 = UNetDown(filters*8, filters*8, dropout=0.5)
+        self.down6 = UNetDown(filters*8, filters*8, dropout=0.5)
+        self.down7 = UNetDown(filters*8, filters*8, dropout=0.5)
+        self.down8 = UNetDown(filters*8, filters*8, normalize=False, dropout=0.5)
         
         # Upsampling layers
-        self.up1 = UNetUp(512, 512, dropout=0.5)
-        self.up2 = UNetUp(1024, 512, dropout=0.5)
-        self.up3 = UNetUp(1024, 512, dropout=0.5)
-        self.up4 = UNetUp(1024, 512, dropout=0.5)
-        self.up5 = UNetUp(1024, 256)
-        self.up6 = UNetUp(512, 128)
-        self.up7 = UNetUp(256, 64)
+        self.up1 = UNetUp(filters*8, filters*8, dropout=0.5)
+        self.up2 = UNetUp(filters*16, filters*8, dropout=0.5)
+        self.up3 = UNetUp(filters*16, filters*8, dropout=0.5)
+        self.up4 = UNetUp(filters*16, filters*8, dropout=0.5)
+        self.up5 = UNetUp(filters*16, filters*4)
+        self.up6 = UNetUp(filters*8, filters*2)
+        self.up7 = UNetUp(filters*4, filters)
         
         # Final output layer
         self.final = nn.Sequential(
-            nn.ConvTranspose2d(128, out_channels, kernel_size=4, stride=2, padding=1),
+            nn.ConvTranspose2d(filters*2, out_channels, kernel_size=4, stride=2, padding=1),
             nn.Tanh()
         )
     

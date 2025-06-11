@@ -1,15 +1,47 @@
-# Data split ratios
+# Data split ratios (keep stable for reproducibility)
 TRAIN_RATIO: 0.7
 VAL_RATIO: 0.15
 TEST_RATIO: 0.15
 RANDOM_STATE: 42
 
-# Data preprocessing
+# Data preprocessing - Enhanced
 IMAGE_SIZE: 256
-BATCH_SIZE: 16
+BATCH_SIZE: 8  # Reduced for better gradient stability
 NUM_WORKERS: 2
+DATA_AUGMENTATION: true  # Enable data augmentation
+NORMALIZE_MEAN: [0.5, 0.5, 0.5]
+NORMALIZE_STD: [0.5, 0.5, 0.5]
 
-# Model parameters
-DIRECTION: "rgb2thermal"  # "rgb2thermal" or "thermal2rgb"
-NUM_EPOCHS: 200
-LEARNING_RATE: 0.0002
+# Model parameters - Optimized
+DIRECTION: "rgb2thermal"
+NUM_EPOCHS: 500  # Increased significantly
+LEARNING_RATE: 0.0002  # Start rate
+LR_SCHEDULER: "step"  # Add learning rate scheduler
+LR_STEP_SIZE: 100  # Decay every 100 epochs
+LR_GAMMA: 0.5  # Decay factor
+
+# Loss function weights - Enhanced
+LAMBDA_PIXEL: 200  # Increased L1 loss weight
+LAMBDA_PERCEPTUAL: 10  # Add perceptual loss
+LAMBDA_GAN: 1  # GAN loss weight
+
+# Training strategy - Advanced
+EARLY_STOPPING: true
+PATIENCE: 50  # Stop if no improvement for 50 epochs
+SAVE_FREQUENCY: 20  # Save checkpoint every 20 epochs
+WARMUP_EPOCHS: 10  # Learning rate warmup
+
+# Model architecture - Enhanced
+GENERATOR_FILTERS: 64  # Base number of filters
+DISCRIMINATOR_FILTERS: 64
+DROPOUT_RATE: 0.5
+USE_ATTENTION: false  # Can be enabled for better results
+
+# Optimizer settings - Fine-tuned
+OPTIMIZER: "Adam"
+BETA1: 0.5
+BETA2: 0.999
+WEIGHT_DECAY: 1e-4  # Add weight decay for regularization
+
+# Mixed precision training (if GPU supports)
+USE_AMP: false  # Set to true if you have compatible GPU

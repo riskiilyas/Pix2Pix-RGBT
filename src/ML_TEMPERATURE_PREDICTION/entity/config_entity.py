@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 @dataclass
 class DataIngestionConfig:
@@ -23,9 +23,13 @@ class DataTransformationConfig:
     root_dir: Path
     data_path: Path
     image_size: int = 256
-    batch_size: int = 16
-    num_workers: int = 4
+    batch_size: int = 8
+    num_workers: int = 2
     channels: int = 3  # 3 for RGB, 1 for thermal
+    # New parameters
+    data_augmentation: bool = True
+    normalize_mean: Tuple[float, float, float] = (0.5, 0.5, 0.5)
+    normalize_std: Tuple[float, float, float] = (0.5, 0.5, 0.5)
 
 @dataclass
 class ModelTrainerConfig:
@@ -34,11 +38,43 @@ class ModelTrainerConfig:
     """
     root_dir: Path
     data_path: Path
-    num_epochs: int = 200
+    # Basic training parameters
+    num_epochs: int = 500
     lr: float = 0.0002
-    batch_size: int = 16
+    batch_size: int = 8
     direction: str = 'rgb2thermal'  # 'rgb2thermal' or 'thermal2rgb'
     image_size: int = 256
+    
+    # Learning rate scheduler
+    lr_scheduler: str = "step"
+    lr_step_size: int = 100
+    lr_gamma: float = 0.5
+    warmup_epochs: int = 10
+    
+    # Loss function weights
+    lambda_pixel: float = 200
+    lambda_perceptual: float = 10
+    lambda_gan: float = 1
+    
+    # Training strategy
+    early_stopping: bool = True
+    patience: int = 50
+    save_frequency: int = 20
+    
+    # Model architecture
+    generator_filters: int = 64
+    discriminator_filters: int = 64
+    dropout_rate: float = 0.5
+    use_attention: bool = False
+    
+    # Optimizer settings
+    optimizer: str = "Adam"
+    beta1: float = 0.5
+    beta2: float = 0.999
+    weight_decay: float = 1e-4
+    
+    # Mixed precision
+    use_amp: bool = False
 
 @dataclass
 class ModelEvaluationConfig:
@@ -50,6 +86,7 @@ class ModelEvaluationConfig:
     evaluation_path: Path
     image_size: int = 256
     direction: str = 'rgb2thermal'  # 'rgb2thermal' or 'thermal2rgb'
+    batch_size: int = 8
 
 @dataclass
 class PredictionConfig:

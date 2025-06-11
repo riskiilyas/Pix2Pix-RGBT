@@ -59,7 +59,11 @@ class ConfigurationManager:
             image_size=self.params.IMAGE_SIZE,
             batch_size=self.params.BATCH_SIZE,
             num_workers=self.params.NUM_WORKERS,
-            channels=3 if self.params.DIRECTION == 'thermal2rgb' else 1
+            channels=3 if self.params.DIRECTION == 'thermal2rgb' else 1,
+            # New parameters
+            data_augmentation=self.params.DATA_AUGMENTATION,
+            normalize_mean=tuple(self.params.NORMALIZE_MEAN),
+            normalize_std=tuple(self.params.NORMALIZE_STD)
         )
         
         return data_transformation_config
@@ -75,11 +79,37 @@ class ConfigurationManager:
         model_trainer_config = ModelTrainerConfig(
             root_dir=Path(config.root_dir),
             data_path=Path(config.data_path),
+            # Basic parameters
             num_epochs=self.params.NUM_EPOCHS,
             lr=self.params.LEARNING_RATE,
             batch_size=self.params.BATCH_SIZE,
             direction=self.params.DIRECTION,
-            image_size=self.params.IMAGE_SIZE
+            image_size=self.params.IMAGE_SIZE,
+            # Learning rate scheduler
+            lr_scheduler=self.params.LR_SCHEDULER,
+            lr_step_size=self.params.LR_STEP_SIZE,
+            lr_gamma=self.params.LR_GAMMA,
+            warmup_epochs=self.params.WARMUP_EPOCHS,
+            # Loss weights
+            lambda_pixel=self.params.LAMBDA_PIXEL,
+            lambda_perceptual=self.params.LAMBDA_PERCEPTUAL,
+            lambda_gan=self.params.LAMBDA_GAN,
+            # Training strategy
+            early_stopping=self.params.EARLY_STOPPING,
+            patience=self.params.PATIENCE,
+            save_frequency=self.params.SAVE_FREQUENCY,
+            # Model architecture
+            generator_filters=self.params.GENERATOR_FILTERS,
+            discriminator_filters=self.params.DISCRIMINATOR_FILTERS,
+            dropout_rate=self.params.DROPOUT_RATE,
+            use_attention=self.params.USE_ATTENTION,
+            # Optimizer
+            optimizer=self.params.OPTIMIZER,
+            beta1=self.params.BETA1,
+            beta2=self.params.BETA2,
+            weight_decay=self.params.WEIGHT_DECAY,
+            # Mixed precision
+            use_amp=self.params.USE_AMP
         )
         
         return model_trainer_config
@@ -97,7 +127,8 @@ class ConfigurationManager:
             model_path=Path(config.model_path),
             evaluation_path=Path(config.evaluation_path),
             image_size=self.params.IMAGE_SIZE,
-            direction=self.params.DIRECTION
+            direction=self.params.DIRECTION,
+            batch_size=self.params.BATCH_SIZE
         )
         
         return model_evaluation_config
