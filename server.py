@@ -778,13 +778,14 @@ def setup_logging():
     return app_logger, request_logger
 
 
-app_logger, request_logger = setup_logging()
+# app_logger, request_logger = setup_logging()
 if __name__ == '__main__':
     print("🚀 Starting Flask server with Hugging Face integration...")
     print(f"📡 HF Space URL: {HUGGING_FACE_SPACE_URL}")
     print(f"🔑 HF API Token: {'✅ Available' if HF_API_TOKEN else '❌ Not set'}")
     print(f"🤖 Use HF Space: {'✅ Enabled' if USE_HF_SPACE else '❌ Disabled'}")
-    
+    app_logger, request_logger = setup_logging()
+  
     # Test MongoDB connection
     try:
         mongo.db.list_collection_names()

@@ -16,7 +16,7 @@ numpy==1.24.4
 matplotlib==3.7.3
 
 # Hugging Face integration
-gradio-client==0.8.1
+gradio-client==1.10.3
 requests==2.31.0
 huggingface-hub==0.19.4
 
