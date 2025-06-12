@@ -778,6 +778,7 @@ def setup_logging():
     return app_logger, request_logger
 
 
+app_logger, request_logger = setup_logging()
 if __name__ == '__main__':
     print("🚀 Starting Flask server with Hugging Face integration...")
     print(f"📡 HF Space URL: {HUGGING_FACE_SPACE_URL}")
@@ -793,9 +794,6 @@ if __name__ == '__main__':
 
     port = int(os.environ.get('PORT', 3210))
     debug_mode = os.environ.get('FLASK_ENV', 'production') == 'development'
-
-    if debug_mode:
-        app_logger, request_logger = setup_logging()
 
 
     # Run Flask app
