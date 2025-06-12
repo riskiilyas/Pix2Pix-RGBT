@@ -143,49 +143,50 @@ class HuggingFaceInference:
             import traceback
             traceback.print_exc()
             raise Exception(f"Gradio Space prediction failed: {str(e)}")
-        def predict_via_api(self, image_path: str) -> str:
-            """Predict using HF Inference API - returns TIFF file path"""
-            if not self.api_token:
-                raise Exception("HF API token not provided")
+
+    def predict_via_api(self, image_path: str) -> str:
+        """Predict using HF Inference API - returns TIFF file path"""
+        if not self.api_token:
+            raise Exception("HF API token not provided")
+        
+        headers = {"Authorization": f"Bearer {self.api_token}"}
+        
+        try:
+            with open(image_path, "rb") as f:
+                image_bytes = f.read()
             
-            headers = {"Authorization": f"Bearer {self.api_token}"}
+            response = requests.post(
+                self.api_url,
+                headers=headers,
+                data=image_bytes,
+                timeout=60
+            )
             
-            try:
-                with open(image_path, "rb") as f:
-                    image_bytes = f.read()
+            if response.status_code == 200:
+                # Convert response to 16-bit TIFF
+                image = Image.open(io.BytesIO(response.content))
+                thermal_array = np.array(image)
                 
-                response = requests.post(
-                    self.api_url,
-                    headers=headers,
-                    data=image_bytes,
-                    timeout=60
-                )
+                # Scale to 16-bit if needed
+                if thermal_array.dtype != np.uint16:
+                    thermal_array = (thermal_array * 256).astype(np.uint16)
                 
-                if response.status_code == 200:
-                    # Convert response to 16-bit TIFF
-                    image = Image.open(io.BytesIO(response.content))
-                    thermal_array = np.array(image)
-                    
-                    # Scale to 16-bit if needed
-                    if thermal_array.dtype != np.uint16:
-                        thermal_array = (thermal_array * 256).astype(np.uint16)
-                    
-                    # Save as TIFF
-                    temp_tiff = tempfile.NamedTemporaryFile(suffix='.tiff', delete=False)
-                    try:
-                        import tifffile
-                        tifffile.imwrite(temp_tiff.name, thermal_array)
-                    except ImportError:
-                        thermal_image_pil = Image.fromarray(thermal_array, mode='I;16')
-                        thermal_image_pil.save(temp_tiff.name, format='TIFF')
-                    
-                    print(f"✅ Thermal TIFF created from API: {temp_tiff.name}")
-                    return temp_tiff.name
-                else:
-                    raise Exception(f"API Error: {response.status_code} - {response.text}")
-                    
-            except Exception as e:
-                raise Exception(f"HF API prediction failed: {str(e)}")
+                # Save as TIFF
+                temp_tiff = tempfile.NamedTemporaryFile(suffix='.tiff', delete=False)
+                try:
+                    import tifffile
+                    tifffile.imwrite(temp_tiff.name, thermal_array)
+                except ImportError:
+                    thermal_image_pil = Image.fromarray(thermal_array, mode='I;16')
+                    thermal_image_pil.save(temp_tiff.name, format='TIFF')
+                
+                print(f"✅ Thermal TIFF created from API: {temp_tiff.name}")
+                return temp_tiff.name
+            else:
+                raise Exception(f"API Error: {response.status_code} - {response.text}")
+                
+        except Exception as e:
+            raise Exception(f"HF API prediction failed: {str(e)}")
     
     def predict(self, image_path: str, min_temp: float = 28, max_temp: float = 30) -> Tuple[str, Dict]:
         """Main prediction method - returns TIFF path and local analysis"""
@@ -790,6 +791,9 @@ if __name__ == '__main__':
         print("✅ MongoDB connected successfully")
     except Exception as e:
         print(f"❌ MongoDB connection failed: {e}")
-    
+
+    port = int(os.environ.get('PORT', 3210))
+    debug_mode = os.environ.get('FLASK_ENV', 'production') == 'development'
+
     # Run Flask app
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

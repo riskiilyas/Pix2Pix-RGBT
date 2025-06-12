@@ -44,12 +44,11 @@ RUN useradd --create-home --shell /bin/bash flaskuser && \
 # Switch to non-root user
 USER flaskuser
 
-# Expose internal port (Flask will run on this port inside container)
-EXPOSE 5000
+# Expose port 3210
+EXPOSE 3210
 
-# Health check (using internal port)
+# Health check (menggunakan port 3210)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+    CMD curl -f http://localhost:3210/health || exit 1
 
-# Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "120", "--access-logfile", "logs/access.log", "--error-logfile", "logs/error.log", "--log-level", "info", "server:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:3210", "--workers", "2", "--timeout", "120", "--access-logfile", "logs/access.log", "--error-logfile", "logs/error.log", "--log-level", "info", "server:app"]
