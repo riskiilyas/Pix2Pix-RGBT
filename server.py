@@ -778,13 +778,11 @@ def setup_logging():
     return app_logger, request_logger
 
 
-# app_logger, request_logger = setup_logging()
 if __name__ == '__main__':
     print("🚀 Starting Flask server with Hugging Face integration...")
     print(f"📡 HF Space URL: {HUGGING_FACE_SPACE_URL}")
     print(f"🔑 HF API Token: {'✅ Available' if HF_API_TOKEN else '❌ Not set'}")
     print(f"🤖 Use HF Space: {'✅ Enabled' if USE_HF_SPACE else '❌ Disabled'}")
-    app_logger, request_logger = setup_logging()
   
     # Test MongoDB connection
     try:
@@ -795,6 +793,10 @@ if __name__ == '__main__':
 
     port = int(os.environ.get('PORT', 3210))
     debug_mode = os.environ.get('FLASK_ENV', 'production') == 'development'
+
+    if debug_mode:
+        app_logger, request_logger = setup_logging()
+
 
     # Run Flask app
     app.run(host='0.0.0.0', port=port, debug=debug_mode)
